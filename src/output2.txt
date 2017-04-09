@@ -1,0 +1,80 @@
+0 <statement>
+ 1 for
+  2 <assignment>
+   3 i
+   3 =
+   3 <expr>
+    4 <boolTerm>
+     5 <boolPrimary>
+      6 <E>
+       7 <term>
+        8 <primary> 0
+  2 <expr>
+   3 <boolTerm>
+    4 <boolPrimary>
+     5 <E>
+      6 <term>
+       7 <primary>< : unexpected symbol where id, int, float, or ( expected
+     5 <
+     5 <E>
+      6 <term>
+       7 <primary> 100
+  2 <assignment>
+   3 i
+   3 =
+   3 <expr>
+    4 <boolTerm>
+     5 <boolPrimary>
+      6 <E>
+       7 <term>
+        8 <primary> 1
+       7 +
+       7 <term>
+        8 <primary> 1
+  2 <statement>
+   3 <Block>
+    4 <SList>
+     5 <statement>
+      6 <assignment>
+       7 x
+       7 =
+       7 <expr>
+        8 <boolTerm>
+         9 <boolPrimary>
+          10 <E>
+           11 <term>
+            12 <primary> x
+           11 +
+           11 <term>
+            12 <primary> 1
+     5 <SList>
+      6 <statement>
+       7 <assignment>
+        8 y
+        8 =
+        8 <expr>
+         9 <boolTerm>
+          10 <boolPrimary>
+           11 <E>
+            12 <term>
+             13 <primary> y
+            12 +
+            12 <term>
+             13 <primary> 2
+      6 <SList>
+       7 <statement>
+        8 print
+         9 <expr>
+          10 <boolTerm>
+           11 <boolPrimary>
+            12 <E>
+             13 <term>
+              14 <primary> print
+               15 <expr>
+                16 <boolTerm>
+                 17 <boolPrimary>
+                  18 <E>
+                   19 <term>
+                    20 <primary> x
+                    20 *
+                    20 <primary> y

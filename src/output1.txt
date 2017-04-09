@@ -1,0 +1,122 @@
+0 <statement>
+ 1 <Block>
+  2 <SList>
+   3 <statement>
+    4 <Cond>if
+     5 <expr>
+      6 <boolTerm>
+       7 <boolPrimary>
+        8 <E>
+         9 <term>
+          10 <primary> b1
+      6 ||
+      6 <boolTerm>
+       7 <boolPrimary>
+        8 <E>
+         9 <term>
+          10 <primary>
+           11 !
+           11 <primary> b2
+     5 <statement>
+      6 <Block>
+       7 <SList>
+        8 <statement>
+         9 <assignment>
+          10 x
+          10 =
+          10 <expr>
+           11 <boolTerm>
+            12 <boolPrimary>
+             13 <E>
+              14 <term>
+               15 <primary> x
+              14 +
+              14 <term>
+               15 <primary> 1
+        8 <SList>
+         9 <statement>
+          10 <assignment>
+           11 y
+           11 =
+           11 <expr>
+            12 <boolTerm>
+             13 <boolPrimary>
+              14 <E>
+               15 <term>
+                16 <primary> x
+               15 -
+               15 <term>
+                16 <primary> y
+     5 else
+      6 <statement>
+       7 <Block>
+        8 <SList>
+         9 <statement>
+          10 <assignment>
+           11 x
+           11 =
+           11 <expr>
+            12 <boolTerm>
+             13 <boolPrimary>
+              14 <E>
+               15 <term>
+                16 <primary> x
+               15 +
+               15 <term>
+                16 <primary> 2
+         9 <SList>
+          10 <statement>
+           11 <assignment>
+            12 y
+            12 =
+            12 <expr>
+             13 <boolTerm>
+              14 <boolPrimary>
+               15 <E>
+                16 <term>
+                 17 <primary> x
+                 17 /
+                 17 <primary> y
+   3 <SList>
+    4 <statement>
+     5 <Cond>if
+      6 <expr>
+       7 <boolTerm>
+        8 <boolPrimary>
+         9 <E>
+          10 <term>
+           11 <primary> b1
+        8 &&
+        8 <boolPrimary>
+         9 <E>
+          10 <term>
+           11 <primary> b2
+      6 <statement>
+       7 <Block>
+        8 <SList>
+         9 <statement>
+          10 <assignment>
+           11 x
+           11 =
+           11 <expr>
+            12 <boolTerm>
+             13 <boolPrimary>
+              14 <E>
+               15 <term>
+                16 <primary> x
+               15 +
+               15 <term>
+                16 <primary> 1
+         9 <SList>
+          10 <statement>
+           11 <assignment>
+            12 y
+            12 =
+            12 <expr>
+             13 <boolTerm>
+              14 <boolPrimary>
+               15 <E>
+                16 <term>
+                 17 <primary> x
+                 17 *
+                 17 <primary> 89

@@ -1,0 +1,10 @@
+TO RUN
+
+Make sure to place input file inside src folder
+Navigate to src folder with my files- IO.java, LexAnalyzer.java, State.java, and Parser.java  in the cmd
+
+then do javac Parser.java, hit enter
+
+then do java Parser inputFileName.txt outputFileName.txt, hit enter
+
+the inputfile MUST BE IN THE SRC FOLDER.
