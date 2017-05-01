@@ -1,7 +1,7 @@
 TO RUN
 
 Make sure to place input file inside src folder
-Navigate to src folder with my files- IO.java, LexAnalyzer.java, State.java, and Parser.java  in the cmd
+Navigate to src folder with my files
 
 then do javac Parser.java, hit enter
 

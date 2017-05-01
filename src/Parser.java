@@ -1,604 +1,624 @@
-
 /**
- * Mohammed Khan Project 2 2017 cs 316
- * So I decided to just make one abstract class, Parser.java
- * It's just easier for me as i mainly use Python and in java the inheritance is much more complicated
- * using the following rules I tried my best to define the parser
- * currently I am trying to find a way to implement
- *
- *
- * SWITCH, CASE AND CASE LIST DO NOT WORK.
- *
- *EVERYTHING ELSE SHOULD WORK FINE AS LONG AS IT DOES NOT CONTAIN SWITCH, CASE
- *
- ⟨statement⟩ → ⟨assignment⟩ | ⟨cond⟩ | ⟨switch⟩ | ⟨while loop⟩ | ⟨do loop⟩ | ⟨for loop⟩ | ⟨print⟩ | ⟨block⟩
- ⟨assignment⟩ → ⟨id⟩ "=" ⟨expr⟩ ";"
- ⟨cond⟩ → "if" "(" ⟨expr⟩ ")" ⟨statement⟩ [ "else" ⟨statement⟩ ]
- ⟨switch⟩ → "switch" "(" ⟨expr⟩ ")" "{" ⟨case list⟩ "}"
- ⟨case list⟩ → { ⟨case⟩ }+
- ⟨case⟩ → "case" ⟨label⟩ ":" ⟨s list⟩ | "default" ":" ⟨s list⟩
- ⟨while loop⟩ → "while" "(" ⟨expr⟩ ")" ⟨statement⟩
- ⟨do loop⟩ → "do" ⟨statement⟩ "while" "(" ⟨expr⟩ ")" ";"
- ⟨for loop⟩ → "for" "(" ⟨assign⟩ ";" ⟨expr⟩ ";" ⟨assign⟩ ")" ⟨statement⟩
- ⟨assign⟩ → ⟨id⟩ "=" ⟨expr⟩
- ⟨print⟩ → "print" ⟨expr⟩ ";"
- ⟨block⟩ → "{" ⟨s list⟩ "}"
- ⟨s list⟩ → { ⟨statement⟩ }
- ⟨expr⟩ → ⟨boolTerm⟩ { "||" ⟨boolTerm⟩ }
- ⟨boolTerm⟩ → ⟨boolPrimary⟩ { "&&" ⟨boolPrimary⟩ }
- ⟨boolPrimary⟩ → ⟨E⟩ [ ⟨rel op⟩ ⟨E⟩ ]
- ⟨rel op⟩ → "<" | "<=" | ">" | ">=" | "==" | "!="
- ⟨E⟩ → ⟨term⟩ { (+|−) ⟨term⟩ }
- ⟨term⟩ → ⟨primary⟩ { (*|/) ⟨primary⟩ }
- ⟨primary⟩ → ⟨id⟩ | ⟨int⟩ | ⟨float⟩ | ⟨floatE⟩ | ⟨boolLiteral⟩ | "(" ⟨expr⟩ ")" | − ⟨primary⟩ | ! ⟨primary⟩
- ⟨boolLiteral⟩ → "false" | "true"
- * */
-public abstract class Parser extends LexAnalyzer //extending the Lexical Analyzer because we need the states and IO
+
+ This class is a top-down, recursive-descent parser for the following syntactic categories:
+
+ <statement> --> <assignment> | <cond> | <switch> | <while loop> | <do loop> | <for loop> | <print> | <block>
+ <assignment> --> <id> "=" <expr> ";"
+ <cond> --> "if" "(" <expr> ")" <statement> [ "else" <statement> ]
+ <switch> --> "switch" "(" <expr> ")" "{" <case list> "}"
+ <case list> --> { <case> }+
+ <case> --> "case" <label> ":" <s list> | "default" ":" <s list>
+ <label> --> <int>
+ <while loop> --> "while" "(" <expr> ")" <statement>
+ <do loop> --> "do" <statement> "while" "(" <expr> ")" ";"
+ <for loop> --> "for" "(" <assign> ";" <expr> ";" <assign> ")" <statement>
+ <assign> --> <id> "=" <expr>
+ <print> --> "print" <expr> ";"
+ <block> --> "{" <s list> "}"
+ <s list> --> { <statement> }
+ <expr> --> <boolTerm> { "||" <boolTerm> }
+ <boolTerm> --> <boolPrimary> { "&&" <boolPrimary> }
+ <boolPrimary> --> <E> [ <rel op> <E> ]
+ <rel op> --> "<" | "<=" | ">" | ">=" | "==" | "!="
+ <E> --> <term> { (+|-) <term> }
+ <term> --> <primary> { (*|/) <primary> }
+ <primary> --> <id> | <int> | <float> | <floatE> | <boolLiteral> | "(" <expr> ")" | - <primary> | ! <primary>
+ <boolLiteral> --> "false" | "true"
+
+ NOTE: In the 2-branch conditionals, each "else" matches the closest preceding unmatched "if".
+ NOTE: The binary operators +, -, *, /, ||, && associate to left.
+
+ The definitions of the tokens are given in the lexical analyzer class file "LexAnalyzer.java".
+
+ The following variables and functions of the "LexAnalyzer" class are used:
+
+ static String t // holds an extracted token
+ static State state // the current state of the finite automaton
+ static int getToken() // extracts the next token
+ static void display(String s)
+ static void displayln(String s)
+ static void setIO(String inFile, String outFile)
+ static void closeIO()
+
+ The program will display the parse tree in linearly indented form.
+ Each syntactic category name labeling a node is displayed on a separate line,
+ prefixed with the integer i representing the node's depth and indented by i blanks.
+ The string variable "indent" will keep track of the correct number of blanks for indentation and
+ will be passed to parse functions corresponding to syntactic categories.
+
+ **/
+
+import java.util.*;
+
+public abstract class Parser extends LexAnalyzer
 {
-
-	public static void statement(String s)
-	{
-		/**<statement> → <assignment> | <increment> | <decrement> |<block> | <cond> | <while> | <do> | <for>|<Print> */
+    static boolean syntaxErrorFound = false;
 
 
-		displayln(s + s.length() + " " +  "<statement>");
-		s = s + " ";
+    public static Statement statement()
 
-		if(state == State.LBrace)
-		{
-			Block(s);
-			return;
-		}
-		else if(state == State.Keyword_if)
-		{
-			cond(s);
-			return;
-
-		}
-		else if(state == State.Keyword_while)
-		{
-		While(s);
-		return;
-		}
-		else if(state == State.Keyword_for)
-		{
-			For(s);
-			return;
-		}
-		else if(state == State.Keyword_print)
-		{
-			Print(s);
-			return;
-		}
-		else if(state == State.Keyword_do)
-		{
-			Do(s);
-			return;
-		}
-		else if(state == State.Id)
-		{
-			assignment(s);
-			return;
-		}
-
-		else
-		{
-			errorMsg(7);
-			return;
-		}
-
-	} //end of statement
-
-	public static void assignment(String s)
-	{
-		/** ⟨assignment⟩ → ⟨id⟩ "=" ⟨expr⟩ ";" */
-
-		displayln(s + s.length() + " <assignment>");
-		s = s + " ";
-
-		if(state == State.Id)
-		{
-			displayln(s + s.length() + " " + t);
-			getToken();
-
-			if(state == State.Assign)
-			{
-				displayln(s + s.length() + " " + t);
-				getToken();
-				expr(s);
-				if(state == State.Semicolon)
-				{
-					getToken();
-					return;
-				}
-				else
-				{
-					errorMsg(6);
-					return;
-
-				}
-			}
-			else
-			{
-				errorMsg(4);
-				return;
-			}
-		}
-		else
-		{
-			errorMsg(2);
-			return;
-		}
-	} //end of assignment
-
-
-public static void For(String s){
-		/** ⟨for loop⟩ → "for" "(" ⟨assign⟩ ";" ⟨expr⟩ ";" ⟨assign⟩ ")" ⟨statement⟩ */
-	displayln(s + s.length() + " " + t);
-	s = s + " ";
-	getToken();
-	if(state == State.LParen)
-	{
-		getToken();
-		assignment(s);
-		getToken();
-		expr(s);
-		getToken();
-		assignment(s);
-		if(state == State.RParen)
-		{
-			getToken();
-			statement(s);
-		}
-	}
-
-
-	else {
-		errorMsg(7);
-	}
-} // end of For
-
-public static void Print(String s){
-	/** ⟨print⟩ → "print" ⟨expr⟩ ";" */
-	displayln(s + s.length() + " " + t);
-	s = s + " ";
-	if(state == State.Keyword_print) {
-
-		expr(s);
-		getToken();
-		if(state == State.Semicolon){
-			return;
-		}
-	}
-	//primary(s);
-} // end of print
-
-
-
-
-
-public static void While (String s){
-
-		/** ⟨while loop⟩ → "while" "(" ⟨expr⟩ ")" ⟨statement⟩ */
-
-		displayln(s + s.length() + " " + t);
-		s = s + " ";
-		getToken();
-		if(state == State.LParen)
-		{
-			getToken();
-			expr(s);
-			if(state == State.RParen)
-			{
-				getToken();
-				statement(s);
-				return;
-			}
-			else
-			{
-				errorMsg(1);
-				return;
-			}
-		}
-		else
-		{
-			errorMsg(3);
-			return;
-		}
-	}//end of while
-
-		public static void Do(String s){
-
-			/** ⟨do loop⟩ → "do" ⟨statement⟩ "while" "(" ⟨expr⟩ ")" ";" */
-			displayln(s + s.length() + " " + t);
-			s = s + " ";
-			getToken();
-			statement(s);
-
-			//getToken();
-			if(state == State.Keyword_while){
-				displayln(s + s.length() + " " + t);
-				getToken();
-			if(state == State.LParen)
-			{
-				getToken();
-				expr(s);
-				if(state == State.RParen)
-				{
-					return;
-				}
-				else
-				{
-					errorMsg(1);
-					return;
-				}
-			}
-			else
-			{
-				errorMsg(1);
-				return;
-			}
-			}
-			else
-				return;
-		}//end of Do
-
-
-
-
-
-
-
-	public static void SList(String s)
-	{
-		/** ⟨s list⟩ → { ⟨statement⟩ } */
-
-		displayln(s + s.length() + " <SList>");
-		s = s + " ";
-
-		statement(s);
-
-		while(state == State.Keyword_if || state == State.Keyword_do
-				|| state == State.Id || state == State.Keyword_while ||
-				 state == State.LBrace || state == State.Keyword_for ||
-				state == State.Keyword_print)
-		{
-
-			displayln(s + s.length() + " <SList>");
-			s = s + " ";
-			statement(s);
-		}
-	}//end of SList
-
-	public static void Block(String s)
-	{
-		/** ⟨block⟩ → "{" ⟨s list⟩ "}" */
-		displayln(s + s.length() + " <Block>");
-		s = s + " ";
-
-		if(state == State.LBrace)
-		{
-			getToken();
-			SList(s);
-			if(state == State.RBrace)
-			{
-				getToken();
-				return;
-			}
-			else
-			{
-				errorMsg(5);
-				return;
-			}
-		}
-
-	} // end of block
-
-
-	public static void cond (String s){
-		/** ⟨cond⟩ → "if" "(" ⟨expr⟩ ")" ⟨statement⟩ [ "else" ⟨statement⟩ ] */
-		displayln(s + s.length() + " <Cond>" +t);
-		s = s + " ";
-		getToken();
-		if(state == State.LParen)
-		{
-			getToken();
-			expr(s);
-			if(state == State.RParen)
-			{
-				getToken();
-				statement(s);
-
-				if(state == State.Keyword_else)
-				{
-					displayln(s + s.length() + " " + t);
-					s = s + " ";
-					getToken();
-					statement(s);
-					return;
-				}
-				else
-				{
-					return;
-
-				}
-			}
-			else
-			{
-				errorMsg(1);
-				return;
-			}
-		}
-		else
-		{
-			errorMsg(3);
-			return;
-		}
-	}//end of cond aka condition
-
-	public static void expr(String s)
-	{
-		/**⟨expr⟩ → ⟨boolTerm⟩ { "||" ⟨boolTerm⟩ }*/
-
-		displayln(s + s.length() + " <expr>");
-		s = s + " ";
-
-		boolTerm(s);
-
-		while(state == State.Or)
-		{
-			displayln(s + s.length() + " " + t);
-			getToken();
-			boolTerm(s);
-		}
-	} //end of expr
-
-	public static void boolTerm(String s)
-	{
-		/** ⟨boolTerm⟩ → ⟨boolPrimary⟩ { "&&" ⟨boolPrimary⟩ } */
-
-		displayln(s + s.length() + " <boolTerm>");
-		s = s + " ";
-
-		boolPrimary(s);
-
-		while(state == State.And)
-		{
-			displayln(s + s.length() + " " + t);
-			getToken();
-			boolPrimary(s);
-		}
-	} //end of boolTerm
-
-	public static void boolPrimary(String s)
-	{
-		/** ⟨boolPrimary⟩ → ⟨E⟩ [ ⟨rel op⟩ ⟨E⟩ ] */
-
-		displayln(s + s.length() + " <boolPrimary>");
-		s = s + " ";
-
-		E(s);
-
-		if(state == State.Lt || state == State.Le || state == State.Gt
-				              || state == State.Ge || state == State.Eq || state == State.Neq)
-		{
-
-			relOp(s);
-			E(s);
-			return;
-		}
-	} // end of boolPrimary
-
-	public static void relOp(String s)
-	{
-		/**  ⟨rel op⟩ → "<" | "<=" | ">" | ">=" | "==" | "!=" */
-
-		if(state == State.Lt)
-		{
-			displayln(s + s.length() + " " + t);
-			getToken();
-			return;
-		}
-		else if(state == State.Le)
-		{
-
-			displayln(s + s.length() + " " + t);
-			getToken();
-			return;
-		}
-		else if(state == State.Lt)
-		{
-			displayln(s + s.length() + " " + t);
-			getToken();
-			return;
-		}
-		else if(state == State.Gt)
-		{
-			displayln(s + s.length() + " " + t);
-			getToken();
-			return;
-		}
-		else if(state == State.Ge)
-		{
-			displayln(s + s.length() + " " + t);
-			getToken();
-			return;
-		}
-		else if(state == State.Eq)
-		{
-			displayln(s + s.length() + " " + t);
-			getToken();
-			return;
-		}
-		else if(state == State.Neq)
-		{
-			displayln(s + s.length() + " " + t);
-			getToken();
-			return;
-		}
-		else
-		{
-			errorMsg(8);
-		}
-	} //End Of relOps aka Real operations
-    public static void E(String s)
-
-    /** <E> → <term> | <term> + <E> | <term> - <E> */
+    // <statement> --> <assignment> | <cond> | <switch> | <while loop> | <do lpop> | <for loop> | <print> | <block>
 
     {
-        displayln(s + s.length() + " <E>");
-        s = s + " ";
-
-        term(s);
-        while ( state == State.Add || state == State.Sub )
+        switch ( state )
         {
-            displayln(s+ s.length()+ " "+ t);
-            getToken();
-            term(s);
+            case Id:             return assignment();
+            case Keyword_if:     return cond();
+            case Keyword_switch: return switchStatement();
+            case Keyword_while:  return whileLoop();
+            case Keyword_do:     return doLoop();
+            case Keyword_for:    return forLoop();
+            case Keyword_print:  return print();
+            case LBrace:         return block();
+            default:
+                errorMsg(6);
+                return null;
         }
-    } // end of E
+    }
 
+    public static Assignment assignment()
 
-    public static void term(String s)
-
-    /** <term> → <primary> | <primary> * <term> | <primary> / <term> */
-
-    {
-        displayln(s+ s.length()+ " <term>");
-        s = s+" ";
-
-        primary(s);
-        while ( state == State.Mul || state == State.Div )
-        {
-            displayln(s+s.length()+" "+t);
-            getToken();
-            primary(s);
-        }
-    } // end of term
-
-
-    public static void primary(String s)
-
-    /** ⟨primary⟩ → ⟨id⟩ | ⟨int⟩ | ⟨float⟩ | ⟨floatE⟩ | ⟨boolLiteral⟩ | "(" ⟨expr⟩ ")" | − ⟨primary⟩ | ! ⟨primary⟩ */
+    // <assignment> --> <id> "=" <expr> ";"
 
     {
-        display(s+ s.length()+ " <primary>");
-        s = s + " ";
+        String id = t;
+        getToken();
 
-        switch( state )
+        if ( state == State.Assign )
         {
-			case Keyword_print:
-				displayln(" "+ t);
-				getToken();
-				expr(s);
-				return;
-        case Id:
-        	displayln(" " + t);
             getToken();
-            return;
-
-        case Int:
-        	displayln(" "+t);
-            getToken();
-            return;
-
-        case Float:
-        	displayln(" "+t);
-            getToken();
-            return;
-
-        case FloatE:
-
-            displayln(" "+t);
-            getToken();
-            return;
-
-        case Keyword_true:
-          displayln("\n");
-        	displayln(s+s.length()+"<boolLiteral> "+t);
-        	getToken();
-        	return;
-
-        case Keyword_false:
-
-        	displayln("\n");
-            displayln(s+s.length()+"<boolLiteral> "+t);
-        	getToken();
-        	return;
-
-
-        case LParen:
-
-            displayln("");
-
-            getToken();
-            expr(s);
-            if ( state == State.RParen )
+            Expr expr = expr();
+            if ( state == State.Semicolon )
+            {
                 getToken();
+                return new Assignment(id, expr);
+            }
             else
-                errorMsg(1);
-            return;
-
-
-
-
-        case Sub:
-
-        	displayln("");
-        	display(s + s.length() + " " + t);
-        	getToken();
-        	displayln("");
-        	primary(s);
-        	return;
-
-        case Inv:
-
-        	displayln("");
-        	displayln(s + s.length() + " " + t);
-        	getToken();
-        	primary(s);
-        	return;
-
-
-        default:
-            errorMsg(2);
-            return;
+                errorMsg(4);
         }
-    } // end of primary
+        else
+            errorMsg(5);
+        return null;
+    }
+
+    public static Cond cond()
+
+    // <cond> --> "if" "(" <expr> ")" <statement> [ "else" <statement> ]
+
+    {
+        getToken(); // flush "if"
+        if ( state == State.LParen )
+        {
+            getToken();
+            Expr expr = expr();
+            if ( state == State.RParen )
+            {
+                getToken();
+                Statement statement1 = statement();
+                if ( state == State.Keyword_else )
+                {
+                    getToken();
+                    Statement statement2 = statement();
+                    return new If2(expr, statement1, statement2);
+                }
+                else
+                    return new If1(expr, statement1);
+            }
+            else
+                errorMsg(7);
+        }
+        else
+            errorMsg(8);
+        return null;
+    }
+
+    public static Switch switchStatement()
+
+    // <switch> --> "switch" "(" <expr> ")" "{" <case list> "}"
+
+    {
+        getToken(); // flush "switch"
+        if ( state == State.LParen )
+        {
+            getToken();
+            Expr expr = expr();
+            if ( state == State.RParen )
+            {
+                getToken();
+                if ( state == State.LBrace )
+                {
+                    getToken();
+                    CaseList caseList = caseList();
+                    if ( state == State.RBrace )
+                    {
+                        getToken();
+                        return new Switch(expr, caseList);
+                    }
+                    else
+                        errorMsg(3);
+                }
+                else
+                    errorMsg(11);
+            }
+            else
+                errorMsg(7);
+        }
+        else
+            errorMsg(8);
+        return null;
+    }
+
+    public static CaseList caseList()
+
+    // <case list> --> { <case> }+
+
+    {
+        LinkedList<Case> caseList = new LinkedList<Case>();
+
+        while ( state == State.Keyword_case || state == State.Keyword_default )
+        {
+            Case case_ = case_();
+            caseList.add(case_);
+        }
+        return new CaseList(caseList);
+    }
+
+    public static Case case_()
+
+    // <case> --> "case" <label> ":" <s list> | "default" ":" <s list>
+
+    {
+        if ( state == State.Keyword_case )
+        {
+            getToken();
+            Label label = label();
+            if ( state == State.Colon )
+            {
+                getToken();
+                SList sList = sList();
+                return new LabeledCase(label, sList);
+            }
+            else
+                errorMsg(9);
+        }
+        else // state == State.Keyword_default
+        {
+            getToken();
+            if ( state == State.Colon )
+            {
+                getToken();
+                SList sList = sList();
+                return new DefaultCase(sList);
+            }
+            else
+                errorMsg(9);
+        }
+        return null;
+    }
+
+    public static Label label()
+
+    // <label> --> <int>
+
+    {
+        if ( state == State.Int )
+        {
+            Label label = new Label(Integer.parseInt(t));
+            getToken();
+            return label;
+        }
+        else
+            errorMsg(10);
+        return null;
+    }
+
+    public static WhileLoop whileLoop()
+
+    // <while loop> --> "while" "(" <expr> ")" <statement>
+
+    {
+        getToken(); // flush "while"
+        if ( state == State.LParen )
+        {
+            getToken();
+            Expr expr = expr();
+            if ( state == State.RParen )
+            {
+                getToken();
+                Statement statement = statement();
+                return new WhileLoop(expr, statement);
+            }
+            else
+                errorMsg(7);
+        }
+        else
+            errorMsg(8);
+        return null;
+    }
+
+    public static DoLoop doLoop()
+
+    // <do loop> --> "do" <statement> "while" "(" <expr> ")" ";"
+
+    {
+        getToken(); // flush "do"
+        Statement statement = statement();
+        if ( state == State.Keyword_while )
+        {
+            getToken();
+            if ( state == State.LParen )
+            {
+                getToken();
+                Expr expr = expr();
+                if ( state == State.RParen )
+                {
+                    getToken();
+                    if ( state == State.Semicolon )
+                    {
+                        getToken();
+                        return new DoLoop(statement, expr);
+                    }
+                    else
+                        errorMsg(4);
+                }
+                else
+                    errorMsg(7);
+            }
+            else
+                errorMsg(8);
+        }
+        else
+            errorMsg(12);
+        return null;
+    }
+
+    public static ForLoop forLoop()
+
+    // <for loop> --> "for" "(" <assign> ";" <expr> ";" <assign> ")" <statement>
+
+    {
+        getToken(); // flush "for"
+        if ( state == State.LParen )
+        {
+            getToken();
+            Assign assign1 = assign();
+            if ( state == State.Semicolon )
+            {
+                getToken();
+                Expr expr = expr();
+                if ( state == State.Semicolon )
+                {
+                    getToken();
+                    Assign assign2 = assign();
+                    if ( state == State.RParen )
+                    {
+                        getToken();
+                        Statement statement = statement();
+                        return new ForLoop(assign1, expr, assign2, statement);
+                    }
+                    else
+                        errorMsg(7);
+                }
+                else
+                    errorMsg(4);
+            }
+            else
+                errorMsg(4);
+        }
+        else
+            errorMsg(8);
+        return null;
+    }
+
+    public static Assign assign()
+
+    // <assign> --> <id> "=" <expr>
+
+    {
+        String id = t;
+        getToken();
+
+        if ( state == State.Assign )
+        {
+            getToken();
+            Expr expr = expr();
+            return new Assign(id, expr);
+        }
+        else
+            errorMsg(5);
+        return null;
+    }
+
+    public static Print print()
+
+    // <print> --> "print" <expr> ";"
+
+    {
+        getToken(); // flush "print"
+        Expr expr = expr();
+        if ( state == State.Semicolon )
+        {
+            getToken();
+            return new Print(expr);
+        }
+        else
+            errorMsg(4);
+        return null;
+    }
+
+    public static Block block()
+
+    // <block> --> "{" <s list> "}"
+
+    {
+        getToken(); // flush "{"
+        SList sList = sList();
+        if ( state == State.RBrace )
+        {
+            getToken();
+            return new Block(sList);
+        }
+        else
+            errorMsg(3);
+        return null;
+    }
+
+    public static SList sList()
+
+    // <s list> --> { <statement> }
+
+    {
+        LinkedList<Statement> sList = new LinkedList<Statement>();
+
+        while ( beginsStatement() )
+        {
+            Statement statement = statement();
+            sList.add(statement);
+        }
+        return new SList(sList);
+    }
+
+    static boolean beginsStatement()
+    {
+        return
+                state == State.Id || state == State.Keyword_if || state == State.Keyword_switch ||
+                        state == State.Keyword_while || state == State.Keyword_do || state == State.Keyword_for ||
+                        state == State.Keyword_print || state == State.LBrace
+                ;
+    }
+
+    public static Expr expr()
+
+    // <expr> --> <boolTerm> { "||" <boolTerm> }
+
+    {
+        LinkedList<BoolTermItem> boolTermItemList = new LinkedList<BoolTermItem>();
+
+        BoolTerm boolTerm = boolTerm();
+        boolTermItemList.add(new SingleBoolTermItem(boolTerm));
+        while ( state == State.Or )
+        {
+            getToken();
+            boolTerm = boolTerm();
+            boolTermItemList.add(new OrBoolTermItem(boolTerm));
+        }
+        return new Expr(boolTermItemList);
+    }
+
+    public static BoolTerm boolTerm()
+
+    // <boolTerm> --> <boolPrimary> { "&&" <boolPrimary> }
+
+    {
+        LinkedList<BoolPrimaryItem> boolPrimaryItemList = new LinkedList<BoolPrimaryItem>();
+
+        BoolPrimary boolPrimary = boolPrimary();
+        boolPrimaryItemList.add(new SingleBoolPrimaryItem(boolPrimary));
+        while ( state == State.And )
+        {
+            getToken();
+            boolPrimary = boolPrimary();
+            boolPrimaryItemList.add(new AndBoolPrimaryItem(boolPrimary));
+        }
+        return new BoolTerm(boolPrimaryItemList);
+    }
+
+    public static BoolPrimary boolPrimary()
+
+    // <boolPrimary> --> <E> [ <relop> <E> ]
+    // <rel op> --> "<" | "<=" | ">" | ">=" | "==" | "!="
+
+    {
+        E e1 = E();
+
+        if ( state.isRelationalOp() ) // state = Lt, Le, Gt, Ge, Eq, or Neq
+        {
+            State relop = state;
+            getToken();
+            E e2 = E();
+            return new RelPrimary(e1, e2, relop);
+        }
+        else
+            return new SingleE(e1);
+    }
+
+    public static E E()
+
+    // <E> --> <term> { (+|-) <term> }
+
+    {
+        LinkedList<TermItem> termItemList = new LinkedList<TermItem>();
+
+        Term term = term();
+        termItemList.add(new SingleTermItem(term));
+        while ( state == State.Add | state == State.Sub )
+        {
+            State op = state;
+            getToken();
+            term = term();
+            if ( op == State.Add )
+                termItemList.add(new AddTermItem(term));
+            else // op == State.Sub
+                termItemList.add(new SubTermItem(term));
+        }
+        return new E(termItemList);
+    }
+
+    public static Term term()
+
+    // <term> --> <primary> { (*|/) <primary> }
+
+    {
+        LinkedList<PrimaryItem> primaryItemList = new LinkedList<PrimaryItem>();
+
+        Primary primary = primary();
+        primaryItemList.add(new SinglePrimaryItem(primary));
+        while ( state == State.Mul | state == State.Div )
+        {
+            State op = state;
+            getToken();
+            primary = primary();
+            if ( op == State.Mul )
+                primaryItemList.add(new MulPrimaryItem(primary));
+            else // op == State.Div
+                primaryItemList.add(new DivPrimaryItem(primary));
+        }
+        return new Term(primaryItemList);
+    }
+
+    public static Primary primary()
+
+    // <primary> --> <id> | <int> | <float> | <floatE> | <boolLiteral> | "(" <expr> ")" | - <primary> | ! <primary>
+    // <boolLiteral> --> "false" | "true"
+
+    {
+        switch ( state )
+        {
+            case Id:
+
+                Id id = new Id(t);
+                getToken();
+                return id;
+
+            case Int:
+
+                Int intElem = new Int(Integer.parseInt(t));
+                getToken();
+                return intElem;
+
+            case Float: case FloatE:
+
+            Floatp floatElem = new Floatp(Float.parseFloat(t));
+            getToken();
+            return floatElem;
+
+            case Keyword_false:
+
+                getToken();
+                return new Bool(false);
+
+            case Keyword_true:
+
+                getToken();
+                return new Bool(true);
+
+            case LParen:
+
+                getToken();
+                Expr expr = expr();
+                if ( state == State.RParen )
+                {
+                    getToken();
+                    Parenthesized paren = new Parenthesized(expr);
+                    return paren;
+                }
+                else
+                {
+                    errorMsg(1);
+                    return null;
+                }
+
+            case Sub:
+
+                getToken();
+                Primary prim = primary();
+                NegPrimary negprim = new NegPrimary(prim);
+                return negprim;
+
+            case Inv:
+
+                getToken();
+                Primary prim_ = primary();
+                InvPrimary invprim = new InvPrimary(prim_);
+                return invprim;
+
+            default:
+
+                errorMsg(2);
+                return null;
+        }
+    }
 
     public static void errorMsg(int i)
     {
-        display(t + " : unexpected symbol where");
+        syntaxErrorFound = true;
+
+        display(t + " : Syntax Error, unexpected symbol where");
 
         switch( i )
         {
-        case 1: displayln(" op or ) expected"); return;
-        case 2: displayln(" id, int, float, or ( expected"); return;
-        case 3: displayln(" ( expected"); return;
-        case 4: displayln(" = expected"); return;
-        case 5: displayln(" } expected"); return;
-        case 6: displayln(" ; expected"); return;
-        case 7: displayln(" id, {, if, while, or do expected"); return;
-        case 8: displayln(" <, <=, >, >=, ==, != expected"); return;
-
+            case 1:	 displayln(" arith op or ) expected"); return;
+            case 2:  displayln(" id, int, float, bool literal, (, -, or ! expected"); return;
+            case 3:	 displayln(" } expected"); return;
+            case 4:	 displayln(" ; expected"); return;
+            case 5:	 displayln(" = expected"); return;
+            case 6:	 displayln(" id, if, switch, while, do, for, print, or { expected"); return;
+            case 7:	 displayln(" ) expected"); return;
+            case 8:  displayln(" ( expected"); return;
+            case 9:  displayln(" : expected"); return;
+            case 10: displayln(" integer label expected"); return;
+            case 11: displayln(" { expected"); return;
+            case 12: displayln(" while expected"); return;
+            case 13: displayln(" "); return;
+            case 14: displayln(" "); return;
         }
-    } // end of the error errorMsg
+    }
 
     public static void main(String argv[])
-
-    // The input/output file have to be passed as argv[0] and argv[1] made this error on the first part.
-
     {
-        setIO(argv[0],argv[1]);
+        // argv[0]: input file containing a statement
+        // argv[1]: output file displaying the parse tree or error messages
+
+        setIO( argv[0], argv[1] );
         setLex();
 
-        String s = ""; // used to properly indent
-
         getToken();
-        statement(s);
+        Statement statement = statement(); // build a parse tree
         if ( ! t.isEmpty() )
-            displayln(t + "  : unexpected symbol");
+            displayln(t + " : Syntax Error, unexpected symbol");
+        else if ( ! syntaxErrorFound )
+            statement.printParseTree("");
 
         closeIO();
-    } // end of main
+    }
 }

@@ -1,5 +1,4 @@
 // This class defines I/O variables and functions used by lexical analyzers and parsers.
-//from website
 
 import java.io.*;
 
